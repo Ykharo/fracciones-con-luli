@@ -596,6 +596,10 @@
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
 
+      function randomChoice(items) {
+        return items[rand(0, items.length - 1)];
+      }
+
       function pickChallengeMode() {
         return Math.random() < 0.5 ? "+" : "-";
       }
@@ -605,83 +609,78 @@
       }
 
       function generateLevel1Problem() {
-        const denominator = rand(2, 10);
-        let a = rand(1, denominator - 1);
-        let b = rand(1, denominator - 1);
+        const candidates = [];
 
-        if (state.mode === "+") {
-          while (a + b >= denominator || a + b <= 1) {
-            a = rand(1, denominator - 1);
-            b = rand(1, denominator - 1);
-          }
-        } else {
-          while (a <= b || a - b <= 0) {
-            a = rand(1, denominator - 1);
-            b = rand(1, denominator - 1);
+        for (let denominator = 2; denominator <= 10; denominator += 1) {
+          for (let a = 1; a < denominator; a += 1) {
+            for (let b = 1; b < denominator; b += 1) {
+              const resultNum = state.mode === "+" ? a + b : a - b;
+              const isValid = state.mode === "+"
+                ? resultNum > 1 && resultNum < denominator
+                : resultNum > 0;
+
+              if (!isValid) continue;
+
+              candidates.push({
+                aNum: a,
+                aDen: denominator,
+                bNum: b,
+                bDen: denominator,
+                resultNum,
+                resultDen: denominator,
+                lcm: denominator,
+                eqNum1: a,
+                eqNum2: b,
+              });
+            }
           }
         }
 
-        return {
-          aNum: a,
-          aDen: denominator,
-          bNum: b,
-          bDen: denominator,
-          resultNum: state.mode === "+" ? a + b : a - b,
-          resultDen: denominator,
-          lcm: denominator,
-          eqNum1: a,
-          eqNum2: b,
-        };
+        return randomChoice(candidates);
       }
 
       function generateLevel2Problem() {
-        let aDen = rand(2, 9);
-        let bDen = rand(3, 10);
-        while (aDen === bDen || lcm(aDen, bDen) > 24) {
-          aDen = rand(2, 9);
-          bDen = rand(3, 10);
+        const candidates = [];
+
+        for (let aDen = 2; aDen <= 9; aDen += 1) {
+          for (let bDen = 3; bDen <= 10; bDen += 1) {
+            if (aDen === bDen) continue;
+
+            const common = lcm(aDen, bDen);
+            if (common > 24) continue;
+
+            const factorA = common / aDen;
+            const factorB = common / bDen;
+
+            for (let aNum = 1; aNum < aDen; aNum += 1) {
+              for (let bNum = 1; bNum < bDen; bNum += 1) {
+                const eqNum1 = aNum * factorA;
+                const eqNum2 = bNum * factorB;
+                const resultNum = state.mode === "+" ? eqNum1 + eqNum2 : eqNum1 - eqNum2;
+
+                const isValid = state.mode === "+"
+                  ? resultNum > 1 && resultNum < common && !isTrivialWhole(resultNum, common)
+                  : resultNum > 0 && !isTrivialWhole(resultNum, common);
+
+                if (!isValid) continue;
+
+                candidates.push({
+                  aNum,
+                  aDen,
+                  bNum,
+                  bDen,
+                  lcm: common,
+                  eqNum1,
+                  eqNum2,
+                  resultNum,
+                  resultDen: common,
+                });
+              }
+            }
+          }
         }
 
-        const common = lcm(aDen, bDen);
-        const factorA = common / aDen;
-        const factorB = common / bDen;
-        let aNum = rand(1, aDen - 1);
-        let bNum = rand(1, bDen - 1);
-
-        if (state.mode === "+") {
-          while (
-            aNum * factorA + bNum * factorB >= common ||
-            aNum * factorA + bNum * factorB <= 1 ||
-            isTrivialWhole(aNum * factorA + bNum * factorB, common)
-          ) {
-            aNum = rand(1, aDen - 1);
-            bNum = rand(1, bDen - 1);
-          }
-        } else {
-          while (
-            aNum * factorA <= bNum * factorB ||
-            aNum * factorA - bNum * factorB <= 0 ||
-            isTrivialWhole(aNum * factorA - bNum * factorB, common)
-          ) {
-            aNum = rand(1, aDen - 1);
-            bNum = rand(1, bDen - 1);
-          }
-        }
-
-        const eqNum1 = aNum * factorA;
-        const eqNum2 = bNum * factorB;
-
-        return {
-          aNum,
-          aDen,
-          bNum,
-          bDen,
-          lcm: common,
-          eqNum1,
-          eqNum2,
-          resultNum: state.mode === "+" ? eqNum1 + eqNum2 : eqNum1 - eqNum2,
-          resultDen: common,
-        };
+        return randomChoice(candidates);
       }
 
       function asFractionHTML(num, den) {
