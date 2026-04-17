@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fracciones con Luli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              mist: "#F0F4F8",
+              blush: "#FFB7B2",
+              sky: "#B2E2F2",
+              mint: "#B2F2BB",
+              ink: "#32435A",
+              sun: "#FFD166",
+            },
+            fontFamily: {
+              display: ["Fredoka", "sans-serif"],
+              body: ["Quicksand", "sans-serif"],
+            },
+            boxShadow: {
+              soft: "0 16px 40px rgba(80, 112, 149, 0.15)",
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background:
+          radial-gradient(circle at top left, rgba(255, 183, 178, 0.55), transparent 34%),
+          radial-gradient(circle at top right, rgba(178, 226, 242, 0.65), transparent 28%),
+          linear-gradient(180deg, #f7fbff 0%, #f0f4f8 100%);
+      }
+
+      .glass {
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(10px);
+      }
+
+      .floaty {
+        animation: floaty 3.2s ease-in-out infinite;
+      }
+
+      .wiggle {
+        animation: wiggle 0.45s ease-in-out 2;
+      }
+
+      @keyframes floaty {
+        0%, 100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      @keyframes wiggle {
+        0%, 100% {
+          transform: rotate(0deg);
+        }
+        25% {
+          transform: rotate(-5deg);
+        }
+        75% {
+          transform: rotate(5deg);
+        }
+      }
+
+      .sparkle {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        opacity: 0;
+        animation: confetti 1.2s ease-out forwards;
+      }
+
+      @keyframes confetti {
+        0% {
+          transform: translate3d(0, 0, 0) scale(0.8) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translate3d(var(--x), var(--y), 0) scale(1.1) rotate(220deg);
+          opacity: 0;
+        }
+      }
+
+      .speech::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        right: 28px;
+        border-width: 10px 8px 0;
+        border-style: solid;
+        border-color: white transparent transparent;
+      }
+
+      .fraction-stack {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1;
+      }
+
+      .fraction-input {
+        width: 4.9rem;
+        height: 4.15rem;
+        border: 3px solid #32435A;
+        border-radius: 0.35rem;
+        background: white;
+        text-align: center;
+        font-family: "Fredoka", sans-serif;
+        font-size: 2.55rem;
+        color: #32435A;
+        outline: none;
+      }
+
+      .fraction-input:disabled {
+        opacity: 0.45;
+        background: #f8fafc;
+      }
+
+      .fraction-den {
+        min-width: 4.9rem;
+        border-top: 4px solid #32435A;
+        padding-top: 0.35rem;
+        text-align: center;
+      }
+
+      .mcm-box {
+        width: 6.3rem;
+        height: 4.15rem;
+        border: 3px solid #32435A;
+        border-radius: 0.35rem;
+        background: white;
+        text-align: center;
+        font-family: "Fredoka", sans-serif;
+        font-size: 2.4rem;
+        color: #32435A;
+        outline: none;
+      }
+
+      .equation-grid {
+        display: grid;
+        grid-template-columns: minmax(4.9rem, 5.2rem) auto minmax(4.9rem, 5.2rem) auto minmax(4.9rem, 5.2rem);
+        grid-template-rows: auto auto;
+        align-items: end;
+        justify-content: space-between;
+        column-gap: 0.9rem;
+        row-gap: 0.6rem;
+        width: 100%;
+      }
+
+      .equation-symbol {
+        align-self: center;
+        justify-self: center;
+      }
+
+      .equation-den {
+        justify-self: center;
+      }
+
+      .top-equation-grid {
+        display: grid;
+        grid-template-columns: minmax(4.9rem, 5.2rem) auto minmax(4.9rem, 5.2rem) auto minmax(4.9rem, 5.2rem);
+        align-items: center;
+        justify-content: start;
+        column-gap: 1rem;
+        width: 100%;
+      }
+
+      @media (max-width: 640px) {
+        .equation-grid {
+          grid-template-columns: minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr);
+          column-gap: 0.5rem;
+        }
+
+        .top-equation-grid {
+          grid-template-columns: minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr) auto minmax(4.5rem, 1fr);
+          column-gap: 0.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen font-body text-ink">
+    <section id="landingScreen" class="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,#d9ecff_0%,#eff7ff_36%,#fef7ea_100%)]">
+      <div class="mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-10">
+        <div class="relative flex-1 overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/70 p-4 shadow-soft sm:p-6">
+          <img
+            src="./landing.png"
+            alt="Portada Fracciones con Luli"
+            class="absolute inset-0 h-full w-full object-contain object-top"
+          />
+          <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0.02)_65%,rgba(255,255,255,0.08)_100%)]"></div>
+
+          <div class="relative z-10 flex min-h-[calc(100vh-4rem)] flex-col">
+            <div class="flex-1"></div>
+
+            <div class="relative mt-auto pb-2 sm:pb-4">
+              <div class="mx-auto max-w-5xl rounded-[2.2rem] bg-white/10 p-3 backdrop-blur-[1px]">
+                <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-3">
+                  <button data-landing-mode="level1" class="landing-card rounded-[2rem] border border-white/70 bg-white/82 p-5 text-center shadow-soft transition hover:-translate-y-1">
+                    <p class="font-display text-4xl text-[#f25a1d]">Nivel 1</p>
+                    <p class="mt-2 text-sm font-bold text-ink/70">10 desafíos mixtos</p>
+                    <div class="mt-4 text-xl text-sun" data-stars-for="level1">☆☆☆☆☆</div>
+                  </button>
+                  <button data-landing-mode="level2" class="landing-card rounded-[2rem] border border-white/70 bg-white/82 p-5 text-center shadow-soft transition hover:-translate-y-1">
+                    <p class="font-display text-4xl text-[#f25a1d]">Nivel 2</p>
+                    <p class="mt-2 text-sm font-bold text-ink/70">10 retos con MCM</p>
+                    <div class="mt-4 text-xl text-sun" data-stars-for="level2">☆☆☆☆☆</div>
+                  </button>
+                  <button data-landing-mode="practice" class="landing-card rounded-[2rem] border border-white/70 bg-white/82 p-5 text-center shadow-soft transition hover:-translate-y-1">
+                    <p class="font-display text-4xl text-[#f25a1d]">Práctica libre</p>
+                    <p class="mt-2 text-sm font-bold text-ink/70">Juega sin límite</p>
+                    <div class="mt-4 text-xl text-sun" data-stars-for="practice">☆☆☆☆☆</div>
+                  </button>
+                </div>
+                <div class="mt-5 flex justify-center">
+                  <button
+                    id="startAdventureBtn"
+                    class="rounded-full bg-gradient-to-r from-[#ff6ea6] to-[#ff7d6c] px-10 py-4 font-display text-2xl text-white shadow-[0_14px_30px_rgba(255,105,145,0.35)] transition hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Comenzar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="gameScreen" class="relative mx-auto hidden min-h-screen max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-10">
+      <header class="mb-4 rounded-[2rem] glass p-4 shadow-soft sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="font-display text-sm uppercase tracking-[0.25em] text-ink/60">Misión de Hoy</p>
+            <h1 class="font-display text-3xl text-ink sm:text-4xl">Fracciones con Luli</h1>
+            <p class="mt-2 max-w-2xl text-sm sm:text-base">
+              Practica sumas y restas con una guía paso a paso, pizzas mágicas y premios cuando lo haces genial.
+            </p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 lg:w-[26rem]">
+            <div class="rounded-3xl bg-sun/60 p-4">
+              <p class="font-display text-sm">Estrellas ganadas</p>
+              <div id="stars" class="mt-2 text-2xl leading-none"></div>
+            </div>
+            <div class="rounded-3xl bg-mint/70 p-4">
+              <p class="font-display text-sm">Desafío</p>
+              <p id="goalText" class="mt-2 text-sm font-bold">Elige una aventura desde la portada.</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="mb-2 flex items-center justify-between text-sm font-bold">
+            <span id="progressLabel">Progreso</span>
+            <span id="progressCount">0/10</span>
+          </div>
+          <div class="h-4 overflow-hidden rounded-full bg-white/90">
+            <div id="progressBar" class="h-full w-0 rounded-full bg-gradient-to-r from-sky to-mint transition-all duration-500"></div>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid flex-1 gap-5 lg:grid-cols-[1.35fr_0.95fr]">
+        <section class="rounded-[2rem] glass p-4 shadow-soft sm:p-6">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-wrap gap-3">
+              <div id="levelSwitch" class="rounded-full bg-mist p-1">
+                <button data-level="1" class="level-btn rounded-full px-4 py-2 font-display text-sm transition">Nivel 1</button>
+                <button data-level="2" class="level-btn rounded-full px-4 py-2 font-display text-sm transition">Nivel 2</button>
+              </div>
+              <div id="modeSwitch" class="rounded-full bg-mist p-1">
+                <button data-mode="+" class="mode-btn rounded-full px-4 py-2 font-display text-sm transition">Sumas</button>
+                <button data-mode="-" class="mode-btn rounded-full px-4 py-2 font-display text-sm transition">Restas</button>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button
+                id="homeBtn"
+                class="rounded-full bg-white px-5 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Volver al inicio
+              </button>
+              <button
+                id="newProblemBtn"
+                class="rounded-full bg-blush px-5 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Nuevo reto
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+            <div class="rounded-[1.75rem] bg-white/80 p-4 sm:p-5">
+              <p class="font-display text-sm uppercase tracking-[0.2em] text-ink/60">Problema</p>
+              <div class="top-equation-grid mt-4 text-3xl font-display sm:text-5xl">
+                <span id="fractionA" class="min-w-[4.6rem] text-center"></span>
+                <span id="operator" class="equation-symbol text-2xl sm:text-4xl">+</span>
+                <span id="fractionB" class="min-w-[4.6rem] text-center"></span>
+                <span class="equation-symbol text-2xl sm:text-4xl">=</span>
+                <div id="finalInlineAnswer" class="fraction-stack">
+                  <input id="finalNum" type="number" min="0" class="fraction-input" />
+                  <div id="finalDenDisplay" class="fraction-den text-3xl sm:text-4xl">5</div>
+                </div>
+              </div>
+              <p id="instructionText" class="mt-4 rounded-2xl bg-sky/35 p-3 text-sm font-bold sm:text-base"></p>
+
+              <div id="level1Panel" class="mt-5 hidden"></div>
+
+              <div id="level2Panel" class="mt-5 hidden space-y-4">
+                <div class="rounded-3xl bg-mist p-4">
+                  <div class="flex flex-wrap items-center gap-4">
+                    <span class="rounded-2xl bg-white/80 px-4 py-3 text-2xl font-display">MCM</span>
+                    <input id="lcmInput" type="number" min="1" class="mcm-box" />
+                    <button
+                      id="checkMcmBtn"
+                      class="rounded-full bg-mint px-5 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Revisar
+                    </button>
+                  </div>
+                </div>
+
+                <div id="equivalentPanel" class="rounded-3xl bg-sky/35 p-4 opacity-50">
+                  <div class="equation-grid text-3xl font-display sm:text-5xl">
+                    <input id="eqNum1" type="number" min="0" class="fraction-input justify-self-center" disabled />
+                    <span class="equation-symbol text-2xl sm:text-4xl" id="eqOperator">+</span>
+                    <input id="eqNum2" type="number" min="0" class="fraction-input justify-self-center" disabled />
+                    <span class="equation-symbol text-2xl sm:text-4xl">=</span>
+                    <input id="level2FinalNum" type="number" min="0" class="fraction-input justify-self-center opacity-50" disabled />
+
+                    <div id="eqDen1" class="fraction-den equation-den text-3xl sm:text-4xl opacity-0">12</div>
+                    <span></span>
+                    <div id="eqDen2" class="fraction-den equation-den text-3xl sm:text-4xl opacity-0">12</div>
+                    <span></span>
+                    <div id="level2FinalDen" class="fraction-den equation-den text-3xl sm:text-4xl opacity-0">12</div>
+                  </div>
+                </div>
+                <div id="level2ActionRow" class="grid gap-3 sm:grid-cols-3">
+                  <button
+                    id="checkEquivalentBtn"
+                    class="rounded-full bg-mint px-5 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Revisar equivalentes
+                  </button>
+                  <button
+                    id="checkFinalBtn"
+                    class="rounded-full bg-mint px-5 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Revisar final
+                  </button>
+                  <button
+                    id="hintBtn"
+                    class="rounded-full bg-sky px-6 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Pista
+                  </button>
+                </div>
+                <div id="finalPanel" class="hidden rounded-3xl bg-blush/35 p-4 opacity-50"></div>
+              </div>
+
+              <div id="mainActionRow" class="mt-5 flex flex-wrap gap-3">
+                <button
+                  id="checkBtn"
+                  class="rounded-full bg-mint px-6 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Revisar respuesta
+                </button>
+                <button id="hintBtnLevel1" class="rounded-full bg-sky px-6 py-3 font-display text-sm text-ink shadow transition hover:scale-[1.02] active:scale-[0.98]">
+                  Pista
+                </button>
+              </div>
+            </div>
+
+            <div class="rounded-[1.75rem] bg-white/80 p-4 sm:p-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-display text-sm uppercase tracking-[0.2em] text-ink/60">Pizzas matemáticas</p>
+                  <h2 class="font-display text-2xl">Mira cómo se parten</h2>
+                </div>
+                <div class="rounded-full bg-mint/80 px-4 py-2 text-xs font-bold" id="visualLabel">Partes originales</div>
+              </div>
+              <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-3xl bg-mist p-4 text-center">
+                  <p class="mb-3 font-display text-lg">Fracción A</p>
+                  <div id="pieA" class="mx-auto aspect-square w-full max-w-[220px]"></div>
+                </div>
+                <div class="rounded-3xl bg-mist p-4 text-center">
+                  <p class="mb-3 font-display text-lg">Fracción B</p>
+                  <div id="pieB" class="mx-auto aspect-square w-full max-w-[220px]"></div>
+                </div>
+              </div>
+              <div class="mt-4 rounded-3xl bg-sun/40 p-4 text-sm font-bold" id="visualExplanation"></div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="relative rounded-[2rem] glass p-4 shadow-soft sm:p-6">
+          <div class="rounded-[1.75rem] bg-white/80 p-5">
+            <p class="font-display text-sm uppercase tracking-[0.2em] text-ink/60">Guía</p>
+            <h2 class="mt-1 font-display text-2xl">Robot Luli</h2>
+            <div class="relative mt-4 min-h-[14rem] rounded-[2rem] bg-gradient-to-br from-sky/50 via-white to-blush/40 p-4">
+              <div id="speechBubble" class="speech absolute right-2 top-2 hidden max-w-[14rem] rounded-3xl bg-white px-4 py-3 text-sm font-bold shadow">
+                ¡Casi! Inténtalo de nuevo
+              </div>
+              <div id="mascot" class="floaty mx-auto mt-6 w-fit transition-transform duration-300">
+                <svg width="170" height="170" viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="45" y="42" width="80" height="72" rx="22" fill="#B2E2F2"></rect>
+                  <rect x="58" y="18" width="54" height="34" rx="17" fill="#FFB7B2"></rect>
+                  <circle cx="85" cy="18" r="8" fill="#FFD166"></circle>
+                  <line x1="85" y1="26" x2="85" y2="40" stroke="#32435A" stroke-width="4" stroke-linecap="round"></line>
+                  <circle cx="71" cy="74" r="10" fill="white"></circle>
+                  <circle cx="99" cy="74" r="10" fill="white"></circle>
+                  <circle id="eyeLeft" cx="71" cy="74" r="4" fill="#32435A"></circle>
+                  <circle id="eyeRight" cx="99" cy="74" r="4" fill="#32435A"></circle>
+                  <path id="mouthHappy" d="M65 93C70 101 79 106 85 106C91 106 100 101 105 93" stroke="#32435A" stroke-width="5" stroke-linecap="round"></path>
+                  <path id="mouthOops" d="M74 99C77 94 81 92 85 92C89 92 93 94 96 99" stroke="#32435A" stroke-width="5" stroke-linecap="round" class="hidden"></path>
+                  <rect x="38" y="118" width="94" height="16" rx="8" fill="#B2F2BB"></rect>
+                  <line x1="62" y1="134" x2="54" y2="152" stroke="#32435A" stroke-width="5" stroke-linecap="round"></line>
+                  <line x1="108" y1="134" x2="116" y2="152" stroke="#32435A" stroke-width="5" stroke-linecap="round"></line>
+                  <line x1="45" y1="80" x2="28" y2="92" stroke="#32435A" stroke-width="5" stroke-linecap="round"></line>
+                  <line x1="125" y1="80" x2="142" y2="92" stroke="#32435A" stroke-width="5" stroke-linecap="round"></line>
+                </svg>
+              </div>
+            </div>
+
+            <div class="mt-5 space-y-3">
+              <div class="rounded-3xl bg-mint/45 p-4">
+                <p class="font-display text-lg">Consejo de Luli</p>
+                <p id="hintText" class="mt-2 text-sm font-bold">
+                  Si las partes de abajo son iguales, solo suma o resta las partes de arriba.
+                </p>
+              </div>
+              <div class="rounded-3xl bg-blush/40 p-4">
+                <p class="font-display text-lg">Estado</p>
+                <p id="statusText" class="mt-2 text-sm font-bold">Elige tu estrategia y prueba con el primer reto.</p>
+              </div>
+            </div>
+          </div>
+          <div id="confettiLayer" class="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]"></div>
+        </aside>
+      </main>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "fracciones-con-luli-progress";
+
+      const state = {
+        screen: "landing",
+        level: 1,
+        mode: "+",
+        solvedCount: 0,
+        totalProblems: 10,
+        currentProblem: null,
+        stage: "answer",
+        sessionKind: "challenge",
+        sessionKey: "level1",
+        selectedLandingMode: "level1",
+        stats: loadStats(),
+      };
+
+      const els = {
+        landingScreen: document.getElementById("landingScreen"),
+        gameScreen: document.getElementById("gameScreen"),
+        startAdventureBtn: document.getElementById("startAdventureBtn"),
+        landingCards: Array.from(document.querySelectorAll(".landing-card")),
+        landingStars: {
+          level1: document.querySelector('[data-stars-for="level1"]'),
+          level2: document.querySelector('[data-stars-for="level2"]'),
+          practice: document.querySelector('[data-stars-for="practice"]'),
+        },
+        stars: document.getElementById("stars"),
+        goalText: document.getElementById("goalText"),
+        progressLabel: document.getElementById("progressLabel"),
+        progressCount: document.getElementById("progressCount"),
+        progressBar: document.getElementById("progressBar"),
+        fractionA: document.getElementById("fractionA"),
+        fractionB: document.getElementById("fractionB"),
+        operator: document.getElementById("operator"),
+        instructionText: document.getElementById("instructionText"),
+        level1Panel: document.getElementById("level1Panel"),
+        level2Panel: document.getElementById("level2Panel"),
+        levelSwitch: document.getElementById("levelSwitch"),
+        modeSwitch: document.getElementById("modeSwitch"),
+        equivalentPanel: document.getElementById("equivalentPanel"),
+        finalPanel: document.getElementById("finalPanel"),
+        lcmInput: document.getElementById("lcmInput"),
+        eqNum1: document.getElementById("eqNum1"),
+        eqNum2: document.getElementById("eqNum2"),
+        eqDen1: document.getElementById("eqDen1"),
+        eqDen2: document.getElementById("eqDen2"),
+        eqOperator: document.getElementById("eqOperator"),
+        checkMcmBtn: document.getElementById("checkMcmBtn"),
+        finalNum: document.getElementById("finalNum"),
+        finalDenDisplay: document.getElementById("finalDenDisplay"),
+        finalInlineAnswer: document.getElementById("finalInlineAnswer"),
+        level2FinalNum: document.getElementById("level2FinalNum"),
+        level2FinalDen: document.getElementById("level2FinalDen"),
+        level2ActionRow: document.getElementById("level2ActionRow"),
+        mainActionRow: document.getElementById("mainActionRow"),
+        checkEquivalentBtn: document.getElementById("checkEquivalentBtn"),
+        checkFinalBtn: document.getElementById("checkFinalBtn"),
+        checkBtn: document.getElementById("checkBtn"),
+        hintBtn: document.getElementById("hintBtn"),
+        hintBtnLevel1: document.getElementById("hintBtnLevel1"),
+        newProblemBtn: document.getElementById("newProblemBtn"),
+        homeBtn: document.getElementById("homeBtn"),
+        hintText: document.getElementById("hintText"),
+        statusText: document.getElementById("statusText"),
+        speechBubble: document.getElementById("speechBubble"),
+        mascot: document.getElementById("mascot"),
+        mouthHappy: document.getElementById("mouthHappy"),
+        mouthOops: document.getElementById("mouthOops"),
+        pieA: document.getElementById("pieA"),
+        pieB: document.getElementById("pieB"),
+        visualLabel: document.getElementById("visualLabel"),
+        visualExplanation: document.getElementById("visualExplanation"),
+        confettiLayer: document.getElementById("confettiLayer"),
+        levelBtns: Array.from(document.querySelectorAll(".level-btn")),
+        modeBtns: Array.from(document.querySelectorAll(".mode-btn")),
+      };
+
+      function loadStats() {
+        try {
+          const raw = window.localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            return { level1: 0, level2: 0, practice: 0 };
+          }
+          return { level1: 0, level2: 0, practice: 0, ...JSON.parse(raw) };
+        } catch (_) {
+          return { level1: 0, level2: 0, practice: 0 };
+        }
+      }
+
+      function saveStats() {
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.stats));
+        } catch (_) {
+          // Si no hay storage disponible, la app sigue funcionando igual.
+        }
+      }
+
+      function gcd(a, b) {
+        let x = Math.abs(a);
+        let y = Math.abs(b);
+        while (y !== 0) {
+          const temp = y;
+          y = x % y;
+          x = temp;
+        }
+        return x || 1;
+      }
+
+      function lcm(a, b) {
+        return Math.abs(a * b) / gcd(a, b);
+      }
+
+      function simplificar(n, d) {
+        if (d === 0) {
+          return { n, d };
+        }
+        const divisor = gcd(n, d);
+        const denominator = d / divisor;
+        const numerator = n / divisor;
+        return denominator < 0
+          ? { n: -numerator, d: -denominator }
+          : { n: numerator, d: denominator };
+      }
+
+      function fractionsEqual(n1, d1, n2, d2) {
+        const a = simplificar(n1, d1);
+        const b = simplificar(n2, d2);
+        return a.n === b.n && a.d === b.d;
+      }
+
+      function rand(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function pickChallengeMode() {
+        return Math.random() < 0.5 ? "+" : "-";
+      }
+
+      function isTrivialWhole(n, d) {
+        return simplificar(n, d).n === simplificar(n, d).d;
+      }
+
+      function generateLevel1Problem() {
+        const denominator = rand(2, 10);
+        let a = rand(1, denominator - 1);
+        let b = rand(1, denominator - 1);
+
+        if (state.mode === "+") {
+          while (a + b >= denominator || a + b <= 1) {
+            a = rand(1, denominator - 1);
+            b = rand(1, denominator - 1);
+          }
+        } else {
+          while (a <= b || a - b <= 0) {
+            a = rand(1, denominator - 1);
+            b = rand(1, denominator - 1);
+          }
+        }
+
+        return {
+          aNum: a,
+          aDen: denominator,
+          bNum: b,
+          bDen: denominator,
+          resultNum: state.mode === "+" ? a + b : a - b,
+          resultDen: denominator,
+          lcm: denominator,
+          eqNum1: a,
+          eqNum2: b,
+        };
+      }
+
+      function generateLevel2Problem() {
+        let aDen = rand(2, 9);
+        let bDen = rand(3, 10);
+        while (aDen === bDen || lcm(aDen, bDen) > 24) {
+          aDen = rand(2, 9);
+          bDen = rand(3, 10);
+        }
+
+        const common = lcm(aDen, bDen);
+        const factorA = common / aDen;
+        const factorB = common / bDen;
+        let aNum = rand(1, aDen - 1);
+        let bNum = rand(1, bDen - 1);
+
+        if (state.mode === "+") {
+          while (
+            aNum * factorA + bNum * factorB >= common ||
+            aNum * factorA + bNum * factorB <= 1 ||
+            isTrivialWhole(aNum * factorA + bNum * factorB, common)
+          ) {
+            aNum = rand(1, aDen - 1);
+            bNum = rand(1, bDen - 1);
+          }
+        } else {
+          while (
+            aNum * factorA <= bNum * factorB ||
+            aNum * factorA - bNum * factorB <= 0 ||
+            isTrivialWhole(aNum * factorA - bNum * factorB, common)
+          ) {
+            aNum = rand(1, aDen - 1);
+            bNum = rand(1, bDen - 1);
+          }
+        }
+
+        const eqNum1 = aNum * factorA;
+        const eqNum2 = bNum * factorB;
+
+        return {
+          aNum,
+          aDen,
+          bNum,
+          bDen,
+          lcm: common,
+          eqNum1,
+          eqNum2,
+          resultNum: state.mode === "+" ? eqNum1 + eqNum2 : eqNum1 - eqNum2,
+          resultDen: common,
+        };
+      }
+
+      function asFractionHTML(num, den) {
+        return `
+          <span class="inline-flex flex-col items-center leading-none">
+            <span class="border-b-4 border-ink px-2 pb-1">${num}</span>
+            <span class="px-2 pt-1">${den}</span>
+          </span>
+        `;
+      }
+
+      function setMascotMood(mood, message = "") {
+        const bubble = els.speechBubble;
+        els.mouthHappy.classList.toggle("hidden", mood === "oops");
+        els.mouthOops.classList.toggle("hidden", mood !== "oops");
+
+        if (mood === "happy") {
+          els.mascot.classList.remove("wiggle");
+          bubble.classList.add("hidden");
+        } else if (mood === "oops") {
+          els.mascot.classList.remove("wiggle");
+          void els.mascot.offsetWidth;
+          els.mascot.classList.add("wiggle");
+          bubble.textContent = message || "¡Casi! Inténtalo de nuevo";
+          bubble.classList.remove("hidden");
+        } else {
+          bubble.classList.add("hidden");
+          els.mascot.classList.remove("wiggle");
+        }
+      }
+
+      function playWinSound() {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          const now = ctx.currentTime;
+          [659.25, 783.99, 987.77].forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.0001, now + index * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.12, now + index * 0.09 + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.09 + 0.26);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + index * 0.09);
+            osc.stop(now + index * 0.09 + 0.28);
+          });
+        } catch (_) {
+          // El sonido es opcional si el navegador no permite audio automático.
+        }
+      }
+
+      function launchConfetti() {
+        const colors = ["#FFB7B2", "#B2E2F2", "#B2F2BB", "#FFD166", "#FFFFFF"];
+        for (let i = 0; i < 24; i += 1) {
+          const piece = document.createElement("span");
+          piece.className = "sparkle";
+          piece.style.left = `${35 + Math.random() * 30}%`;
+          piece.style.top = `${15 + Math.random() * 15}%`;
+          piece.style.background = colors[i % colors.length];
+          piece.style.setProperty("--x", `${-180 + Math.random() * 360}px`);
+          piece.style.setProperty("--y", `${120 + Math.random() * 160}px`);
+          els.confettiLayer.appendChild(piece);
+          setTimeout(() => piece.remove(), 1300);
+        }
+      }
+
+      function starText(count) {
+        return `${"★".repeat(count)}${"☆".repeat(Math.max(5 - count, 0))}`;
+      }
+
+      function currentEarnedStars() {
+        return Math.min(5, Math.floor(state.solvedCount / 2));
+      }
+
+      function updateStars() {
+        els.stars.textContent = starText(currentEarnedStars());
+      }
+
+      function updateProgress() {
+        const target = state.sessionKind === "challenge" ? state.totalProblems : 10;
+        const progress = Math.min(state.solvedCount, target);
+        const pct = (progress / target) * 100;
+        const missing = Math.max(target - progress, 0);
+        els.progressLabel.textContent = state.sessionKind === "challenge"
+          ? `Reto ${state.level}`
+          : "Práctica libre";
+        els.progressCount.textContent = `${progress}/${target}`;
+        els.progressBar.style.width = `${pct}%`;
+        els.goalText.textContent = state.sessionKind === "challenge"
+          ? missing === 0
+            ? "¡Desafío completo!"
+            : `Te faltan ${missing} retos para terminar este nivel.`
+          : `Llevas ${progress} aciertos en esta práctica.`;
+      }
+
+      function updateControls() {
+        els.levelSwitch.classList.toggle("hidden", state.sessionKind === "challenge");
+        els.modeSwitch.classList.toggle("hidden", state.sessionKind === "challenge");
+        els.newProblemBtn.classList.toggle("hidden", state.sessionKind === "challenge");
+        els.levelBtns.forEach((btn) => {
+          const active = Number(btn.dataset.level) === state.level;
+          btn.className = `level-btn rounded-full px-4 py-2 font-display text-sm transition ${
+            active ? "bg-blush text-ink shadow" : "text-ink/70"
+          }`;
+        });
+        els.modeBtns.forEach((btn) => {
+          const active = btn.dataset.mode === state.mode;
+          btn.className = `mode-btn rounded-full px-4 py-2 font-display text-sm transition ${
+            active ? "bg-sky text-ink shadow" : "text-ink/70"
+          }`;
+        });
+      }
+
+      function updateLandingSelection() {
+        els.landingCards.forEach((card) => {
+          const active = card.dataset.landingMode === state.selectedLandingMode;
+          card.classList.toggle("ring-4", active);
+          card.classList.toggle("ring-white", active);
+          card.classList.toggle("scale-[1.02]", active);
+        });
+      }
+
+      function updateLandingStars() {
+        Object.entries(els.landingStars).forEach(([key, node]) => {
+          node.textContent = starText(state.stats[key] || 0);
+        });
+      }
+
+      function showScreen(screen) {
+        state.screen = screen;
+        els.landingScreen.classList.toggle("hidden", screen !== "landing");
+        els.gameScreen.classList.toggle("hidden", screen !== "game");
+        els.gameScreen.classList.toggle("flex", screen === "game");
+      }
+
+      function startSession(sessionKey) {
+        state.sessionKey = sessionKey;
+        state.sessionKind = sessionKey === "practice" ? "practice" : "challenge";
+        state.level = sessionKey === "level2" ? 2 : 1;
+        state.solvedCount = 0;
+        state.stage = state.level === 1 ? "answer" : "lcm";
+        if (state.sessionKind === "practice") {
+          state.mode = "+";
+        } else {
+          state.mode = pickChallengeMode();
+        }
+        updateControls();
+        updateStars();
+        updateProgress();
+        showScreen("game");
+        newProblem();
+      }
+
+      function returnToLanding() {
+        if (state.sessionKey === "practice") {
+          state.stats.practice = Math.max(state.stats.practice, currentEarnedStars());
+          saveStats();
+        }
+        updateLandingStars();
+        updateLandingSelection();
+        showScreen("landing");
+      }
+
+      function completeChallenge() {
+        const earned = currentEarnedStars();
+        state.stats[state.sessionKey] = Math.max(state.stats[state.sessionKey] || 0, earned);
+        saveStats();
+        updateLandingStars();
+        setMascotMood("happy");
+        els.statusText.textContent = "¡Desafío terminado! Volvemos a la portada para elegir otra aventura.";
+        setTimeout(() => {
+          returnToLanding();
+        }, 1400);
+      }
+
+      function makePieSVG(numerator, denominator, accent, label) {
+        const size = 220;
+        const r = 88;
+        const cx = 110;
+        const cy = 110;
+        const safeDen = Math.max(1, denominator);
+        let paths = "";
+
+        for (let i = 0; i < safeDen; i += 1) {
+          const start = (-90 + (360 / safeDen) * i) * Math.PI / 180;
+          const end = (-90 + (360 / safeDen) * (i + 1)) * Math.PI / 180;
+          const x1 = cx + r * Math.cos(start);
+          const y1 = cy + r * Math.sin(start);
+          const x2 = cx + r * Math.cos(end);
+          const y2 = cy + r * Math.sin(end);
+          const large = end - start > Math.PI ? 1 : 0;
+          const fill = i < numerator ? accent : "#ffffff";
+
+          paths += `
+            <path
+              d="M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z"
+              fill="${fill}"
+              stroke="#32435A"
+              stroke-width="3"
+            ></path>
+          `;
+        }
+
+        return `
+          <svg viewBox="0 0 ${size} ${size}" class="w-full h-full" aria-label="${label}">
+            <circle cx="${cx}" cy="${cy}" r="${r}" fill="#fffdf8" stroke="#32435A" stroke-width="4"></circle>
+            ${paths}
+          </svg>
+        `;
+      }
+
+      function renderPies(useEquivalent = false) {
+        const p = state.currentProblem;
+        const num1 = useEquivalent ? p.eqNum1 : p.aNum;
+        const den1 = useEquivalent ? p.lcm : p.aDen;
+        const num2 = useEquivalent ? p.eqNum2 : p.bNum;
+        const den2 = useEquivalent ? p.lcm : p.bDen;
+
+        els.pieA.innerHTML = makePieSVG(num1, den1, "#FFB7B2", "Pizza de la fracción A");
+        els.pieB.innerHTML = makePieSVG(num2, den2, "#B2F2BB", "Pizza de la fracción B");
+        els.visualLabel.textContent = useEquivalent ? "Partes convertidas con MCM" : "Partes originales";
+        els.visualExplanation.textContent = useEquivalent
+          ? "Las pizzas muestran la misma cantidad de comida, pero cortada en partes más pequeñas para poder combinarla fácilmente."
+          : "Cada pizza enseña cuántas partes están coloreadas y cuántas partes iguales tiene el total.";
+      }
+
+      function clearInputs() {
+        [
+          els.lcmInput,
+          els.eqNum1,
+          els.eqNum2,
+          els.finalNum,
+          els.level2FinalNum,
+        ].forEach((input) => {
+          input.value = "";
+        });
+      }
+
+      function updateStageUI() {
+        if (state.level === 1) {
+          els.level1Panel.classList.add("hidden");
+          els.level2Panel.classList.add("hidden");
+          els.mainActionRow.classList.remove("hidden");
+          els.finalInlineAnswer.classList.remove("opacity-50");
+          els.finalInlineAnswer.classList.remove("hidden");
+          els.finalNum.disabled = false;
+          els.level2FinalNum.classList.add("opacity-50");
+          els.instructionText.textContent = "Escribe la fracción resultado. Puedes responder con una fracción equivalente simplificada.";
+          els.hintText.textContent = state.mode === "+"
+            ? "Si las partes de abajo son iguales, solo suma las de arriba y deja igual la de abajo."
+            : "Si las partes de abajo son iguales, resta las de arriba y deja igual la de abajo.";
+          return;
+        }
+
+        els.level2Panel.classList.remove("hidden");
+        els.mainActionRow.classList.add("hidden");
+        const eqUnlocked = state.stage !== "lcm";
+        const finalUnlocked = state.stage === "final";
+        const mcmSolved = state.stage !== "lcm";
+
+        [els.eqNum1, els.eqNum2].forEach((input) => {
+          input.disabled = !eqUnlocked;
+        });
+        els.level2FinalNum.disabled = !finalUnlocked;
+        els.finalInlineAnswer.classList.add("hidden");
+        els.level2FinalNum.classList.toggle("opacity-50", !finalUnlocked);
+
+        els.equivalentPanel.classList.toggle("opacity-50", !eqUnlocked);
+        [els.eqDen1, els.eqDen2, els.level2FinalDen].forEach((el) => {
+          el.classList.toggle("opacity-0", !mcmSolved);
+        });
+        els.checkEquivalentBtn.disabled = !eqUnlocked || finalUnlocked;
+        els.checkEquivalentBtn.classList.toggle("opacity-50", !eqUnlocked || finalUnlocked);
+        els.checkFinalBtn.disabled = !finalUnlocked;
+        els.checkFinalBtn.classList.toggle("opacity-50", !finalUnlocked);
+
+        const messages = {
+          lcm: "Primero encuentra el MCM para ponerles a las dos fracciones el mismo nombre abajo.",
+          equivalent: "Muy bien. Ahora convierte cada fracción a una equivalente con el nuevo denominador.",
+          final: "Perfecto. Ya puedes hacer la operación final y escribir la respuesta.",
+        };
+        els.instructionText.textContent = messages[state.stage];
+        els.hintText.textContent = state.stage === "lcm"
+          ? "Escribe los múltiplos de cada denominador hasta que encuentres el primero que se repite."
+          : state.stage === "equivalent"
+            ? "Multiplica arriba y abajo por el mismo número para no cambiar la cantidad."
+            : "Ahora que las partes de abajo son iguales, opera solo las de arriba.";
+      }
+
+      function renderProblem() {
+        const p = state.currentProblem;
+        els.fractionA.innerHTML = asFractionHTML(p.aNum, p.aDen);
+        els.fractionB.innerHTML = asFractionHTML(p.bNum, p.bDen);
+        els.operator.textContent = state.mode;
+        els.eqOperator.textContent = state.mode;
+        els.finalDenDisplay.textContent = p.resultDen;
+        els.eqDen1.textContent = p.lcm;
+        els.eqDen2.textContent = p.lcm;
+        els.level2FinalDen.textContent = p.lcm;
+        els.statusText.textContent = state.level === 1
+          ? "Resuelve la fracción final y fíjate en las pizzas para comprobar que tiene sentido."
+          : "Sigue el camino: MCM, equivalentes y resultado final.";
+        renderPies(false);
+        updateStageUI();
+      }
+
+      function newProblem() {
+        if (state.sessionKind === "challenge") {
+          state.mode = pickChallengeMode();
+        }
+        state.currentProblem = state.level === 1 ? generateLevel1Problem() : generateLevel2Problem();
+        state.stage = state.level === 1 ? "answer" : "lcm";
+        clearInputs();
+        setMascotMood("neutral");
+        updateControls();
+        renderProblem();
+      }
+
+      function markCorrect(message) {
+        state.solvedCount += 1;
+        updateProgress();
+        updateStars();
+        setMascotMood("happy");
+        els.statusText.textContent = message;
+        launchConfetti();
+        playWinSound();
+      }
+
+      function markWrong(message, bubbleMessage) {
+        setMascotMood("oops", bubbleMessage);
+        els.statusText.textContent = message;
+      }
+
+      function checkLevel1() {
+        const n = Number(els.finalNum.value);
+        const d = state.currentProblem.resultDen;
+        if (!n && n !== 0) {
+          markWrong("Completa el numerador antes de revisar.", "Primero escribe tu respuesta.");
+          return;
+        }
+
+        const p = state.currentProblem;
+        if (fractionsEqual(n, d, p.resultNum, p.resultDen)) {
+          markCorrect("¡Excelente! Acepté tu respuesta porque es correcta o una fracción equivalente.");
+          setTimeout(() => {
+            if (state.sessionKind === "challenge" && state.solvedCount >= state.totalProblems) {
+              completeChallenge();
+            } else {
+              newProblem();
+            }
+          }, 1100);
+        } else {
+          markWrong("Todavía no coincide. Mira si solo debías operar arriba y dejar abajo igual.", "¡Casi! Inténtalo de nuevo");
+        }
+      }
+
+      function checkLevel2Mcm() {
+        const p = state.currentProblem;
+
+        const guess = Number(els.lcmInput.value);
+        if (!guess) {
+          markWrong("Necesito un número para comprobar el MCM.", "Escribe un número para el MCM.");
+          return;
+        }
+        if (guess === p.lcm) {
+          state.stage = "equivalent";
+          updateStageUI();
+          renderPies(true);
+          setMascotMood("happy");
+          els.statusText.textContent = "¡Sí! Ese es el MCM. Ahora convierte las fracciones.";
+        } else {
+          markWrong(
+            "Ese aún no es el MCM correcto.",
+            `Escribe los múltiplos de ${p.aDen} y ${p.bDen} hasta que encuentres uno igual.`,
+          );
+        }
+      }
+
+      function checkLevel2() {
+        const p = state.currentProblem;
+
+        if (state.stage === "lcm") {
+          markWrong("Primero revisa el MCM con su botón.", "Usa el botón Revisar del MCM.");
+          return;
+        }
+
+        if (state.stage === "equivalent") {
+          markWrong("Usa el botón de equivalentes para revisar esta parte.", "Primero revisa las fracciones equivalentes.");
+          return;
+        }
+
+        if (state.stage === "final") {
+          markWrong("Usa el botón de respuesta final para revisar esta parte.", "Ahora revisa la respuesta final.");
+          return;
+        }
+      }
+
+      function checkEquivalentStep() {
+        const p = state.currentProblem;
+
+        if (state.stage === "lcm") {
+          markWrong("Primero revisa el MCM con su botón.", "Primero resuelve el MCM.");
+          return;
+        }
+
+        if (state.stage !== "equivalent") {
+          markWrong("Las fracciones equivalentes ya están revisadas.", "Ahora revisa la respuesta final.");
+          return;
+        }
+
+        const n1 = Number(els.eqNum1.value);
+        const n2 = Number(els.eqNum2.value);
+        if (!n1 && n1 !== 0 || !n2 && n2 !== 0) {
+          markWrong("Completa los dos numeradores equivalentes.", "Faltan los nuevos numeradores.");
+          return;
+        }
+        if (n1 === p.eqNum1 && n2 === p.eqNum2) {
+          state.stage = "final";
+          updateStageUI();
+          setMascotMood("happy");
+          els.statusText.textContent = "¡Muy bien! Ya puedes resolver el resultado final.";
+        } else {
+          markWrong("Uno de los numeradores equivalentes no coincide.", "Multiplica arriba por el mismo número que usaste abajo.");
+        }
+      }
+
+      function checkFinalStep() {
+        const p = state.currentProblem;
+
+        if (state.stage === "lcm") {
+          markWrong("Primero revisa el MCM con su botón.", "Primero resuelve el MCM.");
+          return;
+        }
+
+        if (state.stage === "equivalent") {
+          markWrong("Primero revisa las fracciones equivalentes.", "Todavía falta revisar los equivalentes.");
+          return;
+        }
+
+        if (state.stage !== "final") {
+          markWrong("Aún no se puede revisar la respuesta final.", "Sigue el orden del ejercicio.");
+          return;
+        }
+
+        const n = Number(els.level2FinalNum.value);
+        const d = p.resultDen;
+        if (!n && n !== 0) {
+          markWrong("Completa el numerador final antes de revisar.", "Escribe el numerador final.");
+          return;
+        }
+        if (fractionsEqual(n, d, p.resultNum, p.resultDen)) {
+          markCorrect("¡Lo lograste! Pasaste por el MCM, las equivalentes y el resultado final.");
+          setTimeout(() => {
+            if (state.sessionKind === "challenge" && state.solvedCount >= state.totalProblems) {
+              completeChallenge();
+            } else {
+              newProblem();
+            }
+          }, 1200);
+        } else {
+          markWrong("El resultado final todavía no coincide.", "Ahora solo opera los numeradores.");
+        }
+      }
+
+      function showHint() {
+        const p = state.currentProblem;
+        if (state.level === 1) {
+          els.statusText.textContent = state.mode === "+"
+            ? `Pista: ${p.aNum} + ${p.bNum} se hace arriba, y abajo sigue siendo ${p.aDen}.`
+            : `Pista: ${p.aNum} - ${p.bNum} se hace arriba, y abajo sigue siendo ${p.aDen}.`;
+          return;
+        }
+
+        if (state.stage === "lcm") {
+          els.statusText.textContent = `Pista: busca el primer múltiplo compartido entre ${p.aDen} y ${p.bDen}.`;
+        } else if (state.stage === "equivalent") {
+          els.statusText.textContent = `Pista: ${p.lcm} ÷ ${p.aDen} y ${p.lcm} ÷ ${p.bDen} te dicen por cuánto multiplicar arriba.`;
+        } else {
+          els.statusText.textContent = state.mode === "+"
+            ? `Pista: ${p.eqNum1} + ${p.eqNum2} sobre ${p.lcm}.`
+            : `Pista: ${p.eqNum1} - ${p.eqNum2} sobre ${p.lcm}.`;
+        }
+      }
+
+      function bindEvents() {
+        els.landingCards.forEach((card) => {
+          card.addEventListener("click", () => {
+            state.selectedLandingMode = card.dataset.landingMode;
+            updateLandingSelection();
+          });
+        });
+
+        els.startAdventureBtn.addEventListener("click", () => {
+          startSession(state.selectedLandingMode);
+        });
+
+        els.levelBtns.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            state.level = Number(btn.dataset.level);
+            updateControls();
+            newProblem();
+          });
+        });
+
+        els.modeBtns.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            state.mode = btn.dataset.mode;
+            updateControls();
+            newProblem();
+          });
+        });
+
+        els.homeBtn.addEventListener("click", returnToLanding);
+        els.newProblemBtn.addEventListener("click", newProblem);
+        els.checkMcmBtn.addEventListener("click", checkLevel2Mcm);
+        els.checkBtn.addEventListener("click", () => {
+          if (state.level === 1) {
+            checkLevel1();
+          } else {
+            checkLevel2();
+          }
+        });
+        els.checkEquivalentBtn.addEventListener("click", checkEquivalentStep);
+        els.checkFinalBtn.addEventListener("click", checkFinalStep);
+        els.hintBtn.addEventListener("click", showHint);
+        els.hintBtnLevel1.addEventListener("click", showHint);
+      }
+
+      function init() {
+        updateLandingStars();
+        updateLandingSelection();
+        updateStars();
+        updateProgress();
+        updateControls();
+        bindEvents();
+        showScreen("landing");
+      }
+
+      init();
+    </script>
+  </body>
+</html>
