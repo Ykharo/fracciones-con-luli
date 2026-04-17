@@ -145,6 +145,11 @@
         text-align: center;
       }
 
+      .fraction-den-input {
+        border-top: 4px solid #32435A;
+        margin-top: 0.35rem;
+      }
+
       .mcm-box {
         width: 6.3rem;
         height: 4.15rem;
@@ -319,7 +324,7 @@
                 <span class="equation-symbol text-2xl sm:text-4xl">=</span>
                 <div id="finalInlineAnswer" class="fraction-stack">
                   <input id="finalNum" type="number" min="0" class="fraction-input" />
-                  <div id="finalDenDisplay" class="fraction-den text-3xl sm:text-4xl">5</div>
+                  <input id="finalDen" type="number" min="1" class="fraction-input fraction-den-input" />
                 </div>
               </div>
               <p id="instructionText" class="mt-4 rounded-2xl bg-sky/35 p-3 text-sm font-bold sm:text-base"></p>
@@ -352,7 +357,7 @@
                     <span></span>
                     <div id="eqDen2" class="fraction-den equation-den text-3xl sm:text-4xl opacity-0">12</div>
                     <span></span>
-                    <div id="level2FinalDen" class="fraction-den equation-den text-3xl sm:text-4xl opacity-0">12</div>
+                    <input id="level2FinalDen" type="number" min="1" class="fraction-input fraction-den-input justify-self-center opacity-50" disabled />
                   </div>
                 </div>
                 <div id="level2ActionRow" class="grid gap-3 sm:grid-cols-3">
@@ -511,7 +516,7 @@
         eqOperator: document.getElementById("eqOperator"),
         checkMcmBtn: document.getElementById("checkMcmBtn"),
         finalNum: document.getElementById("finalNum"),
-        finalDenDisplay: document.getElementById("finalDenDisplay"),
+        finalDen: document.getElementById("finalDen"),
         finalInlineAnswer: document.getElementById("finalInlineAnswer"),
         level2FinalNum: document.getElementById("level2FinalNum"),
         level2FinalDen: document.getElementById("level2FinalDen"),
@@ -917,7 +922,9 @@
           els.eqNum1,
           els.eqNum2,
           els.finalNum,
+          els.finalDen,
           els.level2FinalNum,
+          els.level2FinalDen,
         ].forEach((input) => {
           input.value = "";
         });
@@ -931,7 +938,9 @@
           els.finalInlineAnswer.classList.remove("opacity-50");
           els.finalInlineAnswer.classList.remove("hidden");
           els.finalNum.disabled = false;
+          els.finalDen.disabled = false;
           els.level2FinalNum.classList.add("opacity-50");
+          els.level2FinalDen.classList.add("opacity-50");
           els.instructionText.textContent = "Escribe la fracción resultado. Puedes responder con una fracción equivalente simplificada.";
           els.hintText.textContent = state.mode === "+"
             ? "Si las partes de abajo son iguales, solo suma las de arriba y deja igual la de abajo."
@@ -949,13 +958,20 @@
           input.disabled = !eqUnlocked;
         });
         els.level2FinalNum.disabled = !finalUnlocked;
+        els.level2FinalDen.disabled = !finalUnlocked;
         els.finalInlineAnswer.classList.add("hidden");
         els.level2FinalNum.classList.toggle("opacity-50", !finalUnlocked);
+        els.level2FinalDen.classList.toggle("opacity-50", !finalUnlocked);
 
         els.equivalentPanel.classList.toggle("opacity-50", !eqUnlocked);
-        [els.eqDen1, els.eqDen2, els.level2FinalDen].forEach((el) => {
+        [els.eqDen1, els.eqDen2].forEach((el) => {
           el.classList.toggle("opacity-0", !mcmSolved);
         });
+        if (!mcmSolved) {
+          els.level2FinalDen.classList.add("opacity-0");
+        } else {
+          els.level2FinalDen.classList.remove("opacity-0");
+        }
         els.checkEquivalentBtn.disabled = !eqUnlocked || finalUnlocked;
         els.checkEquivalentBtn.classList.toggle("opacity-50", !eqUnlocked || finalUnlocked);
         els.checkFinalBtn.disabled = !finalUnlocked;
@@ -980,10 +996,8 @@
         els.fractionB.innerHTML = asFractionHTML(p.bNum, p.bDen);
         els.operator.textContent = state.mode;
         els.eqOperator.textContent = state.mode;
-        els.finalDenDisplay.textContent = p.resultDen;
         els.eqDen1.textContent = p.lcm;
         els.eqDen2.textContent = p.lcm;
-        els.level2FinalDen.textContent = p.lcm;
         els.statusText.textContent = state.level === 1
           ? "Resuelve la fracción final y fíjate en las pizzas para comprobar que tiene sentido."
           : "Sigue el camino: MCM, equivalentes y resultado final.";
@@ -1020,9 +1034,9 @@
 
       function checkLevel1() {
         const n = Number(els.finalNum.value);
-        const d = state.currentProblem.resultDen;
-        if (!n && n !== 0) {
-          markWrong("Completa el numerador antes de revisar.", "Primero escribe tu respuesta.");
+        const d = Number(els.finalDen.value);
+        if ((!n && n !== 0) || !d) {
+          markWrong("Completa numerador y denominador antes de revisar.", "Escribe las dos partes de la fracción.");
           return;
         }
 
@@ -1130,9 +1144,9 @@
         }
 
         const n = Number(els.level2FinalNum.value);
-        const d = p.resultDen;
-        if (!n && n !== 0) {
-          markWrong("Completa el numerador final antes de revisar.", "Escribe el numerador final.");
+        const d = Number(els.level2FinalDen.value);
+        if ((!n && n !== 0) || !d) {
+          markWrong("Completa numerador y denominador finales antes de revisar.", "Escribe la fracción final completa.");
           return;
         }
         if (fractionsEqual(n, d, p.resultNum, p.resultDen)) {
